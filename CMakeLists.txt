@@ -1,7 +1,10 @@
 cmake_minimum_required(VERSION 3.10)
 project(RayTracer)
 
-add_executable(main main.cpp)
+enable_language(CUDA)
+set(CMAKE_CUDA_ARCHITECTURES native)
+
+add_executable(main main.cpp raytracer_kernel.cu)
 
 # --- Run target -------------------------------------------------------
 add_custom_target(run

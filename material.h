@@ -31,6 +31,8 @@ class lambertian : public material {
 
     private:
         color albedo;
+    public:
+        color get_albedo() const { return albedo; }
 };
 
 class metal : public material {
@@ -50,6 +52,9 @@ class metal : public material {
     private:
         color albedo;
         double fuzz;
+    public:
+        color get_albedo() const { return albedo; }
+        double get_fuzz() const { return fuzz; }
 };
 
 class dielectric : public material {
@@ -86,7 +91,8 @@ class dielectric : public material {
             
             return true;
         }
-
+        
+        double get_refraction_index() const { return refraction_index; }
         
 };
 

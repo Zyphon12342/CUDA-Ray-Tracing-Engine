@@ -44,9 +44,14 @@ class sphere : public hittable {
             rec.set_face_normal(r, outward_normal);
             rec.mat = mat;
 
+            rec.mat = mat;
+
             return true;
         }
 
+        point3 get_center() const { return center; }
+        double get_radius() const { return radius; }
+        shared_ptr<material> get_material() const { return mat; }
 
 };
 
