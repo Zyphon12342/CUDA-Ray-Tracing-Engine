@@ -1,10 +1,10 @@
-# Ray Tracing Engine — Iterative Builds
+# CUDA-Accelerated Ray Tracing Engine
 
 ### Cover Photo
 ![Final](assets/final.png)
 
 
-A progressive implementation of a C++ Ray Tracer engine, built and visualized through multiple incremental versions — from basic sphere rendering to realistic materials, refraction, and depth of field.
+A progressive implementation of a C++ Ray Tracer engine, now fully accelerated with CUDA for massive parallelism. Built through multiple incremental versions — from basic sphere rendering to realistic materials, refraction, depth of field, and finally GPU acceleration.
 
 Each iteration builds on the previous, adding new rendering concepts and camera features.
 
@@ -12,31 +12,49 @@ Each iteration builds on the previous, adding new rendering concepts and camera 
 
 ## Build & Run Instructions
 
+**Prerequisites:**
+- CMake 3.10+
+- CUDA Toolkit (nvcc)
+- A CUDA-capable GPU
+
 ### 1. Configure and build the project
-```
+```bash
 mkdir build && cd build
 cmake ..
-```
-
-### 2. Clean, rebuild, generate image.ppm, and open in mpv
-```
-cmake --build . --target clean_view
-```
-This will:
-- Remove old binaries and images
-- Recompile the program
-- Run the ray tracer → image.ppm
-- Open it automatically in mpv
-
-✅ If you only want to build (without running):
-```
 cmake --build .
 ```
 
-✅ If you only want to view the image (after it’s built):
+### 2. Run the ray tracer
+```bash
+./main > image.ppm
 ```
-cmake --build . --target view
+*Note: The rendering progress will be displayed in the terminal.*
+
+### 3. View the image
+```bash
+mpv --keep-open image.ppm
 ```
+
+### Custom CMake Targets
+- `make clean_view`: Clean build, compile, render, and view.
+- `make view`: View the existing `image.ppm`.
+
+---
+
+# Stage 7: CUDA Acceleration (Current)
+
+**Major Upgrade:**
+The rendering engine has been migrated from a recursive CPU implementation to an iterative CUDA kernel. This leverages the massive parallelism of the GPU to compute pixel colors simultaneously.
+
+**Performance Impact:**
+- **CPU Render Time:** ~7,798 seconds (for high-res cover image)
+- **GPU Render Time:** ~107 seconds
+- **Speedup:** ~72x (7,150% increase)
+
+**Technical Changes:**
+- **Iterative Ray Tracing:** Replaced recursion with an iterative loop to avoid GPU stack overflow.
+- **cuRAND:** Implemented parallel random number generation per pixel.
+- **Unified Memory/Structs:** Converted object-oriented scene graph to flat POD (Plain Old Data) structures for device access.
 
 ---
 
@@ -168,9 +186,6 @@ This project uses CMake for building and a custom clean_view target for rapid te
 | 4 | FOV + Camera Orientation | Perspective and direction control |
 | 5 | Defocus Blur | Depth of field realism |
 | 6 | Final Renderer | All effects integrated |
+| 7 | CUDA Acceleration | GPU Parallelism & Optimization |
 
 ---
-
-
-### TODO
-Integrate CUDA computing (parallel processing) currently took 7798s to render cover photo!!
