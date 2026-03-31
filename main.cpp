@@ -9,14 +9,10 @@
 #include <vector>
 #include <iostream>
 
-// Define CUDA structs matching cuda_utils.cuh
-enum MaterialType { LAMBERTIAN, METAL, DIELECTRIC };
-
+// CUDA-compatible material: just the surface color (albedo).
+// Must match the Material struct layout in cuda_utils.cuh.
 struct CUDAMaterial {
-    MaterialType type;
     vec3 albedo;
-    double fuzz;
-    double ref_idx;
 };
 
 struct CUDASphere {
@@ -25,10 +21,9 @@ struct CUDASphere {
     CUDAMaterial mat;
 };
 
-extern "C" void render_cuda(const std::vector<CUDASphere>& host_spheres, int image_width, int image_height, 
-                            int samples_per_pixel, int max_depth,
-                            double vfov, point3 lookfrom, point3 lookat, vec3 vup, 
-                            double focus_dist, double defocus_angle,
+extern "C" void render_cuda(const std::vector<CUDASphere>& host_spheres,
+                            int image_width, int image_height,
+                            double vfov, point3 lookfrom, point3 lookat, vec3 vup,
                             std::vector<int>& output_image_data);
 
 int main() {
@@ -76,18 +71,13 @@ int main() {
 
     camera cam;
 
-    cam.aspect_ratio      = 16.0 / 9.0;
-    cam.image_width       = 1920;
-    cam.samples_per_pixel = 100;
-    cam.max_depth         = 50;
+    cam.aspect_ratio = 16.0 / 9.0;
+    cam.image_width  = 1920;
 
     cam.vfov     = 20;
-    cam.lookfrom = point3(13,2,3);
-    cam.lookat   = point3(0,0,0);
-    cam.vup      = vec3(0,1,0);
-
-    cam.defocus_angle = 0.6;
-    cam.focus_dist    = 10.0;
+    cam.lookfrom = point3(13, 2, 3);
+    cam.lookat   = point3(0, 0, 0);
+    cam.vup      = vec3(0, 1, 0);
 
     // Calculate image height
     int image_height = int(cam.image_width / cam.aspect_ratio);
@@ -104,15 +94,11 @@ int main() {
             
             auto mat = s->get_material();
             if (auto l = std::dynamic_pointer_cast<lambertian>(mat)) {
-                cs.mat.type = LAMBERTIAN;
                 cs.mat.albedo = l->get_albedo();
             } else if (auto m = std::dynamic_pointer_cast<metal>(mat)) {
-                cs.mat.type = METAL;
                 cs.mat.albedo = m->get_albedo();
-                cs.mat.fuzz = m->get_fuzz();
             } else if (auto d = std::dynamic_pointer_cast<dielectric>(mat)) {
-                cs.mat.type = DIELECTRIC;
-                cs.mat.ref_idx = d->get_refraction_index();
+                cs.mat.albedo = vec3(0.95, 0.95, 0.95); // glass: near-white
             }
             cuda_spheres.push_back(cs);
         }
@@ -120,10 +106,8 @@ int main() {
 
     std::clog << "Rendering with CUDA..." << std::endl;
     std::vector<int> image_data;
-    render_cuda(cuda_spheres, cam.image_width, image_height, 
-                cam.samples_per_pixel, cam.max_depth,
+    render_cuda(cuda_spheres, cam.image_width, image_height,
                 cam.vfov, cam.lookfrom, cam.lookat, cam.vup,
-                cam.focus_dist, cam.defocus_angle,
                 image_data);
 
     std::cout << "P3\n" << cam.image_width << " " << image_height << "\n255\n";
